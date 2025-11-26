@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -31,6 +32,7 @@ import com.dialog.security.oauth2.SocialUserInfoFactory;
 import com.dialog.token.domain.RefreshTokenDto;
 import com.dialog.token.service.RefreshTokenServiceImpl;
 import com.dialog.user.domain.ForgotPasswordRequestDTO;
+import com.dialog.user.domain.HomeStatsDto;
 import com.dialog.user.domain.Job;
 import com.dialog.user.domain.LoginDto;
 import com.dialog.user.domain.MeetUser;
@@ -38,6 +40,7 @@ import com.dialog.user.domain.MeetUserDto;
 import com.dialog.user.domain.ResetPasswordRequestDTO;
 import com.dialog.user.domain.UserApiResponseDTO;
 import com.dialog.user.domain.UserSettingsUpdateDto;
+import com.dialog.user.service.CustomUserDetails;
 import com.dialog.user.service.MeetuserService;
 
 import jakarta.servlet.http.Cookie;
@@ -171,5 +174,17 @@ public class MeetUserController {
     public ResponseEntity<UserApiResponseDTO> resetPassword(@Valid @RequestBody ResetPasswordRequestDTO request) {
         meetuserService.resetPassword(request.getToken(), request.getNewPassword());
         return ResponseEntity.ok(new UserApiResponseDTO(true, "비밀번호가 성공적으로 변경되었습니다."));
+    }
+    
+    @GetMapping("api/home/stats")
+    public ResponseEntity<HomeStatsDto> getHomeStats(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        // 로그인 체크
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        // 서비스 호출 및 응답
+        HomeStatsDto stats = meetuserService.getHomeStats(userDetails.getId());
+        return ResponseEntity.ok(stats);
     }
 }

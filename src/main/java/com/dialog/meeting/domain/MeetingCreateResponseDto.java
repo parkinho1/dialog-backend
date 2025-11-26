@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.dialog.actionitem.domain.ActionItem;
+import com.dialog.meeting.domain.Meeting;
 import com.dialog.meetingresult.domain.MeetingResult;
 
 import lombok.Getter;
@@ -30,7 +31,7 @@ public class MeetingCreateResponseDto {
     private ImportanceData importance;
     private List<ActionItemDto> actionItems;
     
-	// --- 내부 DTO 클래스들 ---
+	  // --- 내부 DTO 클래스들 ---
     @Getter
     @Setter
     @NoArgsConstructor
@@ -80,6 +81,7 @@ public class MeetingCreateResponseDto {
         this.status = meeting.getStatus();
         this.scheduledAt = meeting.getScheduledAt();
         
+        // 참가자 Null 방지
         if (meeting.getParticipants() != null) {
             this.participants = meeting.getParticipants().stream()
                     .map(p -> p.getName()) 
@@ -94,37 +96,57 @@ public class MeetingCreateResponseDto {
 
         // MeetingResult 데이터 매핑
         MeetingResult result = meeting.getMeetingResult();
+        
+        // 1. AI 결과가 있을 때 (Completed 상태 등)
         if (result != null) {
             this.purpose = result.getPurpose();
             this.agenda = result.getAgenda();
             this.summary = result.getSummary();
             
             if (result.getImportance() != null) {
-            	this.importance = new ImportanceData(
+                this.importance = new ImportanceData(
                         result.getImportance().name(), 
-                        result.getImportanceReason() // Entity에 getter가 있어야 함
-                    ); 
-                } else {
-                    this.importance = new ImportanceData("MEDIUM", "");
-                }
-
-            // 키워드 (MeetingResultKeyword)
-            this.keywords = result.getKeywords().stream()
-                    .map(mrk -> new KeywordDto(mrk.getKeyword().getName(), mrk.getSource().name()))
-                    .collect(Collectors.toList());
-
-            // 액션 아이템
-            this.actionItems = result.getActionItems().stream()
-                    .map(ActionItemDto::new)
-                    .collect(Collectors.toList());
-        } else {
-            // 결과가 없을 때 (기본값)
-            this.keywords = new ArrayList<>();
-            if (meeting.getHighlightKeywords() != null && !meeting.getHighlightKeywords().isEmpty()) { // 빈 문자열 체크
-                 for(String s : meeting.getHighlightKeywords().split(",")) {
-                     this.keywords.add(new KeywordDto(s.trim(), "USER")); // 공백 제거 및 USER 고정
-                 }
+                        result.getImportanceReason()
+                ); 
+            } else {
+                this.importance = new ImportanceData("MEDIUM", "");
             }
+
+            // 키워드 리스트가 null일 경우 에러 방지
+            if (result.getKeywords() != null) {
+                this.keywords = result.getKeywords().stream()
+                        .map(mrk -> new KeywordDto(
+                            mrk.getKeyword().getName(), 
+                            (mrk.getSource() != null) ? mrk.getSource().name() : "AI"
+                        ))
+                        .collect(Collectors.toList());
+            } else {
+                this.keywords = new ArrayList<>();
+            }
+
+            // 액션 아이템 리스트가 null일 경우 에러 방지
+            if (result.getActionItems() != null) {
+                this.actionItems = result.getActionItems().stream()
+                        .map(ActionItemDto::new)
+                        .collect(Collectors.toList());
+            } else {
+                this.actionItems = new ArrayList<>();
+            }
+        } else {
+            // 2. AI 결과가 없을 때 (기본값 or 하이라이트 키워드 사용)
+            this.purpose = "";
+            this.agenda = "";
+            this.summary = "";
+            this.importance = new ImportanceData("MEDIUM", "");
+            
+            this.keywords = new ArrayList<>();
+            // DB 문자열("키워드1,키워드2") -> 리스트 변환 로직
+            if (meeting.getHighlightKeywords() != null && !meeting.getHighlightKeywords().isEmpty()) { 
+                for(String s : meeting.getHighlightKeywords().split(",")) {
+                    this.keywords.add(new KeywordDto(s.trim(), "USER")); 
+                }
+            }
+            
             this.actionItems = new ArrayList<>();
         }
     }

@@ -54,7 +54,7 @@ public class Transcript {
 
     /** 실제 발화 내용 */
     @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String text;
 
     /** 시작 시간 (밀리초) */

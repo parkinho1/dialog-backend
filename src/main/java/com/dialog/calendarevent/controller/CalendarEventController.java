@@ -111,7 +111,8 @@ public class CalendarEventController {
 		return ResponseEntity.ok().build();
 	}
 
-	@PatchMapping("/calendar/{eventId}/importance")
+	// @PatchMapping("/calendar/{eventId}/importance")
+	@PatchMapping("/calendar/events/{eventId}/importance")
 	public ResponseEntity<Void> toggleImportance(@PathVariable("eventId") String eventId, Principal principal) {
 
 		if (principal == null) {

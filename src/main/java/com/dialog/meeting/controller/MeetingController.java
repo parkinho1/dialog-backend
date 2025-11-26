@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -74,6 +75,13 @@ public class MeetingController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
 	}
 
+  // 전체 회의 목록 조회 (GET /api/meetings)
+  @GetMapping
+  public ResponseEntity<List<MeetingCreateResponseDto>> getAllMeetings() {
+      List<MeetingCreateResponseDto> meetings = meetingService.getAllMeetings();
+      return ResponseEntity.ok(meetings);
+  }
+
 	// 특정 회의 상세 조회 엔드포인트
 	@GetMapping("/{meetingId}")
 	public ResponseEntity<MeetingCreateResponseDto> getMeeting(@PathVariable("meetingId") Long meetingId) {
@@ -135,8 +143,24 @@ public class MeetingController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류가 발생했습니다.");
 		}
 	}
+
+  // 회의 삭제 엔드포인트
+  @DeleteMapping("/{meetingId}")
+  public ResponseEntity<?> deleteMeeting(@PathVariable("meetingId") Long meetingId) {
+      try {
+          log.info("회의 삭제 요청 - meetingId: {}", meetingId);
+          meetingService.deleteMeeting(meetingId);
+          return ResponseEntity.ok("성공적으로 삭제되었습니다.");
+      } catch (IllegalArgumentException e) {
+          log.error("회의 삭제 실패 - 찾을 수 없음: {}", e.getMessage());
+          return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+      } catch (Exception e) {
+          log.error("회의 삭제 중 서버 오류", e);
+          return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류가 발생했습니다.");
+      }
+  }
 	
-	// AI 요약 생성 요청
+	  // AI 요약 생성 요청
     // POST /api/meetings/summarize?meetingId={id}
     @PostMapping("/summarize")
     public ResponseEntity<?> generateSummary(@RequestParam("meetingId") Long meetingId) {

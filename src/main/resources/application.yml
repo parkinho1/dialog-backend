@@ -7,7 +7,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     show-sql: true
     properties:
       hibernate:
@@ -51,6 +51,16 @@ logging:
   level:
     com.dialog.security.jwt: DEBUG
     com.dialog.security.oauth2: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    
+# OAuth2 리다이렉트 URI 설정
+#app:
+  #oauth2:
+    #fail-uri: http://localhost:8080/login?error=true
+    #success-uri: http://localhost:8080/dashboard
+    #redirect-uri: http://localhost:8080/oauth2/redirect
+    
 # 커스텀 구글 API 설정 (캘린더 연동용)
 google:
   client:

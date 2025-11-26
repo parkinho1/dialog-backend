@@ -251,8 +251,8 @@ public class MeetingService {
         if (updateDto.getImportance() != null) {
             if (updateDto.getImportance().getLevel() != null) {
                 try {
-                   String levelStr = mapToEnumString(updateDto.getImportance().getLevel());
-                   importance = ImportanceLevel.valueOf(levelStr);
+                  String levelStr = mapToEnumString(updateDto.getImportance().getLevel());
+                  importance = ImportanceLevel.valueOf(levelStr);
                 } catch (Exception e) { }
             }
             importanceReason = updateDto.getImportance().getReason();
@@ -368,9 +368,9 @@ public class MeetingService {
                 // Speaker ID 보정 로직
                 String tSpeakerId = dto.getSpeaker();
                 if (tSpeakerId == null || !tSpeakerId.startsWith("Speaker ")) {
-                     if (existingNameIdMap.containsKey(dto.getSpeakerName())) {
-                         tSpeakerId = existingNameIdMap.get(dto.getSpeakerName());
-                     }
+                    if (existingNameIdMap.containsKey(dto.getSpeakerName())) {
+                        tSpeakerId = existingNameIdMap.get(dto.getSpeakerName());
+                    }
                 }
 
                 // 값 변경 (Dirty Checking)
@@ -414,11 +414,25 @@ public class MeetingService {
         }
     }
 
-	// AI 요약 생성 요청
-	@Transactional
-	public MeetingResult generateAISummary(Long meetingId) {
-		Meeting meeting = meetingRepository.findById(meetingId)
-				.orElseThrow(() -> new IllegalArgumentException("회의를 찾을 수 없습니다."));
+    // 6. 회의 삭제
+    @Transactional
+    public void deleteMeeting(Long meetingId) {
+        Meeting meeting = meetingRepository.findById(meetingId)
+                .orElseThrow(() -> new IllegalArgumentException("회의를 찾을 수 없습니다. ID: " + meetingId));
+        // 캘린더에 등록된 일정을 먼저 삭제해야 합니다.
+        if (calendarEventRepository.existsByMeetingId(meetingId)) {
+            calendarEventRepository.deleteByMeetingId(meetingId);
+        }
+        // Meeting 엔티티의 CascadeType.ALL 설정 덕분에 
+        // 연결된 Participants, Transcripts, MeetingResult 등은 자동 삭제됩니다.
+        meetingRepository.delete(meeting);
+    }
+
+    // AI 요약 생성 요청
+    @Transactional
+    public MeetingResult generateAISummary(Long meetingId) {
+        Meeting meeting = meetingRepository.findById(meetingId)
+            .orElseThrow(() -> new IllegalArgumentException("회의를 찾을 수 없습니다."));
 
 		List<Transcript> transcripts = transcriptRepository.findByMeetingIdOrderBySequenceOrder(meetingId);
 		if (transcripts.isEmpty()) {

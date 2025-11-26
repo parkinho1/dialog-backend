@@ -36,7 +36,7 @@ public class ChatbotController {
     
     // 회의록 검색 챗봇 (Python으로 전달)
     @PostMapping("/search")
-    public ResponseEntity<String> searchChat(  // [수정] Map → String
+    public ResponseEntity<String> searchChat(
             @RequestBody Map<String, Object> request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         
@@ -90,7 +90,7 @@ public class ChatbotController {
     
     // FAQ 챗봇 (Python으로 전달)
     @PostMapping("/faq")
-    public ResponseEntity<String> faqChat(  // [수정] Map → String
+    public ResponseEntity<String> faqChat(
             @RequestBody Map<String, Object> request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         

@@ -306,7 +306,7 @@ design-assets/
 *personal*
 *private*
 *confidential*
-DockerFile
+
 # ===============================================
 # OAuth2 인증 로직 핵심 소스 코드 예외 처리
 # 민감 정보 패턴(*auth*)에 걸리지만, 필수 소스 코드이므로 강제 포함
